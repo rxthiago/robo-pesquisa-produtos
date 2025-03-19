@@ -2,7 +2,7 @@
 
 public class ImageDownloadService(ILogger<ImageDownloadService> logger)
 {
-    public async Task<string> DownloadImageAsync(string imageUrl, string outputFolder, string ean)
+    public async Task<string> DownloadImageAsync(string imageUrl, string outputFolder, string ean, int indice = 0)
     {
         try
         {
@@ -17,19 +17,12 @@ public class ImageDownloadService(ILogger<ImageDownloadService> logger)
             }
 
             // Nome do arquivo usando o EAN
-            string fileName = $"{ean}{fileExtension}";
+            string fileName = $"{ean}{(indice > 0 ? "_" + indice.ToString() : "")}{fileExtension}";
             string filePath = Path.Combine(outputFolder, fileName);
 
             await File.WriteAllBytesAsync(filePath, imageBytes);
 
             return filePath;
-
-            /*string fileName = Path.GetFileName(new Uri(imageUrl).AbsolutePath);
-            string filePath = Path.Combine(outputFolder, fileName);
-
-            await File.WriteAllBytesAsync(filePath, imageBytes);
-
-            return filePath;*/
         }
         catch (Exception ex)
         {

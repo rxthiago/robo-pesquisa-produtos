@@ -88,7 +88,7 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
 
                 ConcurrentBag<string> errosDownload = [];
 
-                /*var imagensProdutos = produtos.SelectMany((p, i) => p.UrlImagens.Select((url, index) => new ImagemProdutoDto()
+                var imagensProdutos = produtos.SelectMany((p, i) => p.UrlImagens.Select((url, index) => new ImagemProdutoDto()
                 {
                     Ean = p.Ean,
                     Indice = index + 1,
@@ -100,29 +100,23 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
                 await Parallel.ForEachAsync(imagensProdutos, new ParallelOptions()
                 {
                     MaxDegreeOfParallelism = DOWNLOAD_THREADS
-                }, await (produto, cts) =>
+                }, async (imagemProd, cts) =>
                 {
-
-                })*/
-
-                foreach (var produto in produtos)
-                {
-                    foreach (var urlImagem in produto.UrlImagens)
+                    var caminhoImagem = await imageDownloadService.DownloadImageAsync(imagemProd.UrlImagem, pastaImagens, imagemProd.Ean, imagemProd.Indice);
+                    
+                    if (!string.IsNullOrEmpty(caminhoImagem))
                     {
-                        var caminhoImagem = await imageDownloadService.DownloadImageAsync(urlImagem, pastaImagens, produto.Ean);
-                        if (!string.IsNullOrEmpty(caminhoImagem))
-                        {
-                            logger.LogInformation("Imagem {UrlImagem} baixada com sucesso", urlImagem);
-                        }
-                        else
-                        {
-                            logger.LogError("Erro ao baixar imagem do Ean:{Ean}", produto.Ean);
-                            errosDownload.Add(produto.Ean);
-                        }
+                        logger.LogInformation("Imagem {UrlImagem} baixada com sucesso", imagemProd.UrlImagem);
                     }
-                }
+                    else
+                    {
+                        logger.LogError("Erro ao baixar imagem do Ean: {Ean}", imagemProd.Ean);
 
-                if (errosDownload.Any())
+                        errosDownload.Add(imagemProd.Ean);
+                    }
+                });
+
+                if (!errosDownload.IsEmpty)
                 {
                     var pastaLogs = Path.Combine(Environment.CurrentDirectory, "Exportacao", "Logs");
 
