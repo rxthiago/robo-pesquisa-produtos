@@ -1,14 +1,4 @@
-﻿using System.Net;
-using Microsoft.AspNetCore.Mvc;
-using ProdutosClient.WebApi.Dtos;
-using ProdutosClient.WebApi.Enums;
-using ProdutosClient.WebApi.Factories;
-using ProdutosClient.WebApi.Services.ExportacaoPlanilha;
-using ProdutosClient.WebApi.Services.FileImportService;
-using System.Drawing;
-using System.Xml.Linq;
-
-namespace ProdutosClient.WebApi.Services.ImageDownloadService;
+﻿namespace ProdutosClient.WebApi.Services.ImageDownloadService;
 
 public class ImageDownloadService
 {
@@ -37,7 +27,7 @@ public class ImageDownloadService
             string fileName = $"{ean}{fileExtension}";
             string filePath = Path.Combine(outputFolder, fileName);
 
-            await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+            await File.WriteAllBytesAsync(filePath, imageBytes);
 
             return filePath;
 

@@ -8,7 +8,7 @@
             using var reader = new StreamReader(arquivo);
             var eans = new List<string>();
 
-            while(!reader.EndOfStream)
+            while (!reader.EndOfStream)
             {
                 var line = await reader.ReadLineAsync();
                 var values = line?.Split(';') ?? [];

@@ -1,27 +1,36 @@
-﻿using OpenQA.Selenium.Chrome;
+﻿using Newtonsoft.Json;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using ProdutosClient.WebApi.Dtos;
 using ProdutosClient.WebApi.Enums;
-using OpenQA.Selenium.Internal;
 using ProdutosClient.WebApi.External.Sites.Pacheco.Models;
-using Newtonsoft.Json;
 
 namespace ProdutosClient.WebApi.External.Sites.Pacheco
 {
-    public class Pacheco : ISitePesquisa
+    public class Pacheco : ISitePesquisa, IDisposable
     {
         public EnumSite Site => EnumSite.Pacheco;
 
         private static readonly string UrlBasePesquisa = "https://www.drogariaspacheco.com.br/pesquisa?q=";
 
-        public async Task<ProdutoDto?> PesquisarProdutoPorEan(string ean)
+        private readonly ChromeDriver driver;
+
+        public Pacheco()
         {
             var options = new ChromeOptions();
             options.AddArgument("--remote-allow-origins=*");
             options.AddArgument("headless");
 
-            using ChromeDriver driver = new(options);
+            driver = new(options);
+        }
 
+        ~Pacheco()
+        {
+            driver.Quit();
+        }
+
+        public async Task<ProdutoDto?> PesquisarProdutoPorEan(string ean)
+        {
             try
             {
                 string urlPesquisa = UrlBasePesquisa + ean;
@@ -59,7 +68,7 @@ namespace ProdutosClient.WebApi.External.Sites.Pacheco
                 string departmentName = string.Empty;
                 string categoryName = string.Empty;
 
-                if(departmentScriptElement != null)
+                if (departmentScriptElement != null)
                 {
                     string jsonContent = departmentScriptElement.GetAttribute("innerHTML");
                     jsonContent = jsonContent[jsonContent.IndexOf('{')..];
@@ -100,10 +109,12 @@ namespace ProdutosClient.WebApi.External.Sites.Pacheco
             {
                 return default;
             }
-            finally
-            {
-                driver.Quit();
-            }
+        }
+
+        public void Dispose()
+        {
+            driver.Quit();
+            driver.Dispose();
         }
     }
 }

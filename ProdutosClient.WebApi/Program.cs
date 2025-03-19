@@ -1,7 +1,9 @@
+using ProdutosClient.WebApi.External.Sites.Pacheco;
 using ProdutosClient.WebApi.Factories;
 using ProdutosClient.WebApi.Services.ExportacaoPlanilha;
 using ProdutosClient.WebApi.Services.FileImportService;
 using ProdutosClient.WebApi.Services.ImageDownloadService;
+using ProdutosClient.WebApi.Services.ImportacaoListaService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,10 +14,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddSingleton<Pacheco>();
 builder.Services.AddSingleton<SiteFactory>();
 builder.Services.AddSingleton<CsvImportService>();
 builder.Services.AddSingleton<ExportacaoPlanilhaService>();
 builder.Services.AddSingleton<ImageDownloadService>();
+builder.Services.AddSingleton<ImportacaoListaService>();
 
 var app = builder.Build();
 
