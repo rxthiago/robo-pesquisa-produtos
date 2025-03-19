@@ -1,6 +1,7 @@
 ﻿using ProdutosClient.WebApi.Dtos;
 using ProdutosClient.WebApi.Enums;
 using ProdutosClient.WebApi.Factories;
+using ProdutosClient.WebApi.Repositories;
 using ProdutosClient.WebApi.Services.ExportacaoPlanilha;
 using ProdutosClient.WebApi.Services.FileImport;
 using ProdutosClient.WebApi.Services.ImageDownload;
@@ -10,14 +11,17 @@ using System.Collections.Concurrent;
 namespace ProdutosClient.WebApi.Services.ImportacaoLista
 {
     public class ImportacaoListaService(ILogger<ImportacaoListaService> logger,
+                                        IConfiguration configuration,
                                         SiteFactory siteFactory,
                                         CsvImportService csvImportService,
                                         ExportacaoPlanilhaService exportacaoPlanilhaService,
-                                        ImageDownloadService imageDownloadService
+                                        ImageDownloadService imageDownloadService,
+                                        ProdutosRepository produtosRepository
                                         )
     {
 
-        private const int DOWNLOAD_THREADS = 4;
+        private int DownloadThreads => int.TryParse(configuration["DownloadThreads"], out int _downloadThreads) ? _downloadThreads : 4;
+        private int HorasExpiracaoCache => int.TryParse(configuration["HorasExpiracaoCache"], out int _horasExpiracaoCache) ? _horasExpiracaoCache : 24;
 
         public async Task<bool> ImportarProdutosPorEan(FileUploadDto file, EnumSite site)
         {
@@ -37,27 +41,55 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
 
                 var eans = await csvImportService.LerEans(arquivoCsv);
 
-                List<ProdutoDto> produtos = new List<ProdutoDto>();
+                List<ProdutoDto> produtos = [];
 
                 foreach (var ean in eans)
                 {
                     logger.LogInformation("Buscando dados do produto {Ean}", ean);
 
-                    var produto = await sitePesquisa.PesquisarProdutoPorEan(ean);
+                    // Buscar no cache
+                    var produto = produtosRepository.Find(ean, site);
+                    var atualizarCache = false;
+
+                    if(produto == null || 
+                        (DateTime.Now - (produto?.DataCatalogo ?? DateTime.MinValue)).TotalHours > HorasExpiracaoCache)
+                    {
+                        produto = await sitePesquisa.PesquisarProdutoPorEan(ean);
+                        atualizarCache = true;
+                    }
 
                     if (produto == null)
                     {
                         logger.LogInformation("Produto {Ean} não encontrado", ean);
+
+                        produto = new ProdutoDto()
+                        {
+                            Ean = ean,
+                            Origem = site,
+                            ProdutoExiste = false
+                        };
+
+                        produtos.Add(produto);
+                        produtosRepository.InsertOrUpdate(produto);
+
                         continue;
+                    }
+
+                    if(atualizarCache)
+                    {
+                        produtosRepository.InsertOrUpdate(produto);
                     }
 
                     produtos.Add(produto);
                 }
 
+                var produtosValidos = produtos.Where(p => p.ProdutoExiste)
+                                              .ToList();
+
                 var planilha = new Workbook();
                 planilha.Worksheets.Clear();
 
-                var schemaTabela = new SpreadsheetSchemaBuilder<ProdutoDto>(planilha, "Produtos").WithColumn("Ean", p => p.Ean)
+                var schemaTabela = new SpreadsheetSchemaBuilder<ProdutoDto>(planilha, "Produtos").WithColumn("Ean", p => p.Ean, true)
                                                                                                  .WithColumn("Site", p => p.Origem.ToString())
                                                                                                  .WithColumn("Nome", p => p.Nome.ToString())
                                                                                                  .WithColumn("Descrição", p => p.Descricao.ToString())
@@ -66,10 +98,10 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
                                                                                                  .WithColumn("Preco", p => p.Preco.ToString());
 
                 // Exportar para Excel
-                exportacaoPlanilhaService.CreateWorksheet(produtos, schemaTabela);
+                exportacaoPlanilhaService.CreateWorksheet(produtosValidos, schemaTabela);
 
                 var pastaExportacao = Path.Combine(Environment.CurrentDirectory, "Exportacao");
-                var arquivoExportacao = Path.Combine(pastaExportacao, $"Exportacao_{DateTime.Now:dd-MM-yyyy-HH-mm}.xlsx");
+                var arquivoExportacao = Path.Combine(pastaExportacao, $"Exportacao_{site}_{DateTime.Now:dd-MM-yyyy-HH-mm}.xlsx");
 
                 if (!Directory.Exists(pastaExportacao))
                 {
@@ -88,7 +120,7 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
 
                 ConcurrentBag<string> errosDownload = [];
 
-                var imagensProdutos = produtos.SelectMany((p, i) => p.UrlImagens.Select((url, index) => new ImagemProdutoDto()
+                var imagensProdutos = produtosValidos.SelectMany((p, i) => p.UrlImagens.Select((url, index) => new ImagemProdutoDto()
                 {
                     Ean = p.Ean,
                     Indice = index + 1,
@@ -99,7 +131,7 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
 
                 await Parallel.ForEachAsync(imagensProdutos, new ParallelOptions()
                 {
-                    MaxDegreeOfParallelism = DOWNLOAD_THREADS
+                    MaxDegreeOfParallelism = DownloadThreads
                 }, async (imagemProd, cts) =>
                 {
                     var caminhoImagem = await imageDownloadService.DownloadImageAsync(imagemProd.UrlImagem, pastaImagens, imagemProd.Ean, imagemProd.Indice);

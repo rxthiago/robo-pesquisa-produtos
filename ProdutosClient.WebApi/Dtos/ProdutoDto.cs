@@ -1,9 +1,12 @@
-﻿using ProdutosClient.WebApi.Enums;
+﻿using LiteDB;
+using ProdutosClient.WebApi.Enums;
 
 namespace ProdutosClient.WebApi.Dtos
 {
     public class ProdutoDto
     {
+        [BsonId]
+        public string Id => string.Concat(Ean, "-", Origem);
         public int IdProduto { get; set; }
         public string Ean { get; set; } = null!;
         public EnumSite Origem { get; set; }
@@ -14,5 +17,12 @@ namespace ProdutosClient.WebApi.Dtos
         public string Categoria { get; set; } = null!;
         public string Departamento { get; set; } = null!;
         public decimal Preco { get; set; }
+        public DateTime DataCatalogo { get; set; } = DateTime.Now;
+        public bool ProdutoExiste { get; set; } = true;
+
+        public static bool ShouldSerializeId()
+        {
+            return false;
+        }
     }
 }

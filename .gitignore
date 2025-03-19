@@ -401,3 +401,4 @@ FodyWeavers.xsd
 
 **/Exportacao
 **/Logs
+**/*.db

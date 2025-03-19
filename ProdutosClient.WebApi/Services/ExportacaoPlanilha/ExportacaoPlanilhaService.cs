@@ -25,6 +25,16 @@ namespace ProdutosClient.WebApi.Services.ExportacaoPlanilha
                 for (int columnIndex = 0; columnIndex < schemaBuilder.Columns.Count; columnIndex++)
                 {
                     worksheet[row, columnIndex + 1].Value2 = schemaBuilder.Columns[columnIndex].Value(item);
+
+                    if(schemaBuilder.Columns[columnIndex].NumberAsText)
+                    {
+                        worksheet[row, columnIndex + 1].Text = schemaBuilder.Columns[columnIndex].Value(item).ToString();
+                        worksheet[row, columnIndex + 1].IgnoreErrorOptions = IgnoreErrorType.NumberAsText;
+                    }
+                    else
+                    {
+                        worksheet[row, columnIndex + 1].Value2 = schemaBuilder.Columns[columnIndex].Value(item);
+                    }
                 }
 
                 row++;
