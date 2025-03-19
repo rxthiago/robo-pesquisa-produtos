@@ -1,4 +1,4 @@
-﻿namespace ProdutosClient.WebApi.Services.FileImportService
+﻿namespace ProdutosClient.WebApi.Services.FileImport
 {
     public class CsvImportService
     {

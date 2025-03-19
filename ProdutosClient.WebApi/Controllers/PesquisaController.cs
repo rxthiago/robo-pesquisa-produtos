@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProdutosClient.WebApi.Dtos;
 using ProdutosClient.WebApi.Enums;
 using ProdutosClient.WebApi.Factories;
-using ProdutosClient.WebApi.Services.ImportacaoListaService;
+using ProdutosClient.WebApi.Services.ImportacaoLista;
 
 namespace ProdutosClient.WebApi.Controllers;
 

@@ -2,10 +2,12 @@
 using ProdutosClient.WebApi.Enums;
 using ProdutosClient.WebApi.Factories;
 using ProdutosClient.WebApi.Services.ExportacaoPlanilha;
-using ProdutosClient.WebApi.Services.FileImportService;
+using ProdutosClient.WebApi.Services.FileImport;
+using ProdutosClient.WebApi.Services.ImageDownload;
 using Spire.Xls;
+using System.Collections.Concurrent;
 
-namespace ProdutosClient.WebApi.Services.ImportacaoListaService
+namespace ProdutosClient.WebApi.Services.ImportacaoLista
 {
     public class ImportacaoListaService(ILogger<ImportacaoListaService> logger,
                                         SiteFactory siteFactory,
@@ -14,6 +16,8 @@ namespace ProdutosClient.WebApi.Services.ImportacaoListaService
                                         ImageDownloadService imageDownloadService
                                         )
     {
+
+        private const int DOWNLOAD_THREADS = 4;
 
         public async Task<bool> ImportarProdutosPorEan(FileUploadDto file, EnumSite site)
         {
@@ -82,7 +86,24 @@ namespace ProdutosClient.WebApi.Services.ImportacaoListaService
                     Directory.CreateDirectory(pastaImagens);
                 }
 
-                List<string> errosDownload = [];
+                ConcurrentBag<string> errosDownload = [];
+
+                /*var imagensProdutos = produtos.SelectMany((p, i) => p.UrlImagens.Select((url, index) => new ImagemProdutoDto()
+                {
+                    Ean = p.Ean,
+                    Indice = index + 1,
+                    UrlImagem = url
+                }));
+
+                // Baixar imagens em múltiplos Threads
+
+                await Parallel.ForEachAsync(imagensProdutos, new ParallelOptions()
+                {
+                    MaxDegreeOfParallelism = DOWNLOAD_THREADS
+                }, await (produto, cts) =>
+                {
+
+                })*/
 
                 foreach (var produto in produtos)
                 {

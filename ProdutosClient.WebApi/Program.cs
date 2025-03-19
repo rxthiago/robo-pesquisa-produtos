@@ -1,9 +1,9 @@
 using ProdutosClient.WebApi.External.Sites.Pacheco;
 using ProdutosClient.WebApi.Factories;
 using ProdutosClient.WebApi.Services.ExportacaoPlanilha;
-using ProdutosClient.WebApi.Services.FileImportService;
-using ProdutosClient.WebApi.Services.ImageDownloadService;
-using ProdutosClient.WebApi.Services.ImportacaoListaService;
+using ProdutosClient.WebApi.Services.FileImport;
+using ProdutosClient.WebApi.Services.ImageDownload;
+using ProdutosClient.WebApi.Services.ImportacaoLista;
 
 var builder = WebApplication.CreateBuilder(args);
 

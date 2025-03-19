@@ -1,14 +1,7 @@
-﻿namespace ProdutosClient.WebApi.Services.ImageDownloadService;
+﻿namespace ProdutosClient.WebApi.Services.ImageDownload;
 
-public class ImageDownloadService
+public class ImageDownloadService(ILogger<ImageDownloadService> logger)
 {
-    private readonly ILogger<ImageDownloadService> _logger;
-
-    public ImageDownloadService(ILogger<ImageDownloadService> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task<string> DownloadImageAsync(string imageUrl, string outputFolder, string ean)
     {
         try
@@ -40,7 +33,7 @@ public class ImageDownloadService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao baixar a imagem {ImageUrl}", imageUrl);
+            logger.LogError(ex, "Erro ao baixar a imagem {ImageUrl}", imageUrl);
             return string.Empty;
         }
     }
