@@ -2,6 +2,7 @@
 {
     public enum EnumSite
     {
-        Pacheco = 1
+        Pacheco = 1,
+        SaoPaulo = 2
     }
 }
