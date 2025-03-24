@@ -7,6 +7,7 @@ using ProdutosClient.WebApi.Services.FileImport;
 using ProdutosClient.WebApi.Services.ImageDownload;
 using Spire.Xls;
 using System.Collections.Concurrent;
+using System.Threading.RateLimiting;
 
 namespace ProdutosClient.WebApi.Services.ImportacaoLista
 {
@@ -127,6 +128,14 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
                     UrlImagem = url
                 }));
 
+                var rateLimiter = new FixedWindowRateLimiter(new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 30,                 //  máximo de requisições 
+                    Window = TimeSpan.FromMinutes(1),  // janela de 1 minuto
+                    QueueLimit = 0,                    // sem requisições extras na fila
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+                });
+
                 // Baixar imagens em múltiplos Threads
 
                 await Parallel.ForEachAsync(imagensProdutos, new ParallelOptions()
@@ -134,6 +143,8 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
                     MaxDegreeOfParallelism = DownloadThreads
                 }, async (imagemProd, cts) =>
                 {
+                    await  rateLimiter.AcquireAsync(1);
+
                     var caminhoImagem = await imageDownloadService.DownloadImageAsync(imagemProd.UrlImagem, pastaImagens, imagemProd.Ean, imagemProd.Indice);
                     
                     if (!string.IsNullOrEmpty(caminhoImagem))
