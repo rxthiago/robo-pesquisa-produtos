@@ -7,6 +7,7 @@ using ProdutosClient.WebApi.Services.FileImport;
 using ProdutosClient.WebApi.Services.ImageDownload;
 using Spire.Xls;
 using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using System.Threading.RateLimiting;
 
 namespace ProdutosClient.WebApi.Services.ImportacaoLista
@@ -43,6 +44,7 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
                 var eans = await csvImportService.LerEans(arquivoCsv);
 
                 List<ProdutoDto> produtos = [];
+                List<string> eansNaoEncontrados = [];
 
                 foreach (var ean in eans)
                 {
@@ -62,6 +64,8 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
                     if (produto == null)
                     {
                         logger.LogInformation("Produto {Ean} não encontrado", ean);
+
+                        eansNaoEncontrados.Add(ean);
 
                         produto = new ProdutoDto()
                         {
@@ -84,7 +88,25 @@ namespace ProdutosClient.WebApi.Services.ImportacaoLista
                     produtos.Add(produto);
                 }
 
-                var produtosValidos = produtos.Where(p => p.ProdutoExiste)
+
+                //Arquivo de log para EANs não encontrados
+                if (eansNaoEncontrados.Count > 0)
+                {
+                    var pastaLogs = Path.Combine(Environment.CurrentDirectory, "Exportacao", "EansNaoEncontrados");
+
+                    if (!Directory.Exists(pastaLogs))
+                    {
+                        Directory.CreateDirectory(pastaLogs);
+                    }
+
+                    var nomeArquivoLog = Path.Combine(pastaLogs, $"log_nao_encontrados_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.txt");
+                    await File.WriteAllLinesAsync(nomeArquivoLog, eansNaoEncontrados);
+
+                    logger.LogWarning("Arquivo de log criado com {Count} EANs não encontrados: {LogFilePath}",
+                        eansNaoEncontrados.Count, nomeArquivoLog);
+                }
+
+            var produtosValidos = produtos.Where(p => p.ProdutoExiste)
                                               .ToList();
 
                 var planilha = new Workbook();
