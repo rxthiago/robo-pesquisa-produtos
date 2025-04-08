@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
@@ -56,14 +57,16 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
                 }
                 var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
 
-                //var elementoDescricao = driver.FindElement(By.CssSelector("p[style=\"text-align: justify;\"]"));
+                var elementoDescricao = driver.FindElement(By.CssSelector(".vtex-store-components-3-x-productDescriptionText")); // ou  .vtex-store-components-3-x-productDescriptionContainer
 
-                //var elementoDescricao = driver.FindElement(By.XPath("/html/body/div[2]/div/div[1]/div/div/div/div[3]/div/div[3]/div/section/div/div/div/div[2]/div/div/div/div/div[1]"));
+                /*var categoryScriptElement = driver.FindElements(By.TagName("script"))
+                                    .FirstOrDefault(x => x.GetAttribute("innerHTML").Contains("vtex-breadcrumb-1-x-link vtex-breadcrumb-1-x-link--2"));*/
 
-                var elementoDescricao = wait.Until(ExpectedConditions.ElementIsVisible(
-                By.XPath("/html/body/div[2]/div/div[1]/div/div/div/div[3]/div/div[3]/div/section/div/div/div/div[2]/div/div/div/div/div[1]")));
+                var departamentScriptElement = driver.FindElements(By.TagName("script"))
+                                    .FirstOrDefault(x => x.GetAttribute("innerHTML").Contains("vtex-breadcrumb-1-x-link vtex-breadcrumb-1-x-link--1"));
+                
 
-                var elementoPrecoInteiro = driver.FindElement(By.CssSelector(".vtex-product-price-1-x-currencyContainer"));
+                    var elementoPrecoInteiro = driver.FindElement(By.CssSelector(".vtex-product-price-1-x-currencyContainer"));
                 var elementoImagem = driver.FindElement(By.CssSelector(".vtex-store-components-3-x-productImageTag"));
 
                 string precoTexto = elementoPrecoInteiro?.Text?.Replace("R$", "").Replace(" ", "").Trim();
@@ -72,16 +75,22 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
                 string imagemUrl = elementoImagem.GetAttribute("src");
                 imagemUrl = imagemUrl.Replace("width=600", "width=1000").Replace("height=600", "height=1000");
 
+               // var departamentScriptElement = driver.FindElement(By.CssSelector(".vtex-breadcrumb-1-x-link vtex-breadcrumb-1-x-link--1"));
+
+                var categoryScriptElement = driver.FindElement(By.CssSelector(".vtex-breadcrumb-1-x-link.vtex-breadcrumb-1-x-link--2"));
+
+                /*if(departamentScriptElement == null)
+                {
+                    return default;
+                }*/
+
                 // Tenta buscar categoria e departamento se possível
                 string departamento = string.Empty;
                 string categoria = string.Empty;
 
-                var scriptEl = driver.FindElements(By.TagName("script"))
-                                     .FirstOrDefault(x => x.GetAttribute("innerHTML").Contains("categoryName"));
-
-                if (scriptEl != null)
+                if (departamentScriptElement != null)
                 {
-                        var json = scriptEl.GetAttribute("innerHTML");
+                        var json = departamentScriptElement.GetAttribute("innerHTML");
                         json = json[json.IndexOf('{')..];
                         json = json.Remove(json.Length - 1, 1);
 
@@ -96,17 +105,6 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
                         // Se falhar ao ler o script, tenta buscar pelos breadcrumbs
                     }
                 }
-
-                if (string.IsNullOrWhiteSpace(departamento) || string.IsNullOrWhiteSpace(categoria))
-                {
-                    var breadcrumbs = driver.FindElements(By.CssSelector(".vtex-store-components-3-x-breadcrumbItem"));
-                    if (breadcrumbs.Count >= 3)
-                    {
-                        departamento = breadcrumbs[0].Text;
-                        categoria = breadcrumbs[1].Text;
-                    }
-                }
-
 
                 ProdutoDto produto = new()
                 {
