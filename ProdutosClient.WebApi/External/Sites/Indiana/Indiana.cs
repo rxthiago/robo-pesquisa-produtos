@@ -32,19 +32,18 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
         {
             try
             {
-                string urlPesquisa = string.Format(UrlBasePesquisa, ean);
+                string urlPesquisa = UrlBasePesquisa + ean;
                 await driver.Navigate().GoToUrlAsync(urlPesquisa);
 
                 var elementoNomeProduto = driver.FindElement(By.CssSelector(".vtex-store-components-3-x-productBrand"));
                 if (elementoNomeProduto == null)
                     return default;
 
-                var elementoDescricao = driver.FindElement(By.CssSelector("p[style='text-align: justify;']"));
-                var elementoPrecoInteiro = driver.FindElement(By.CssSelector(".vtex-product-price-1-x-currencyInteger"));
-                var elementoPrecoFracao = driver.FindElement(By.CssSelector(".vtex-product-price-1-x-currencyFraction"));
+                var elementoDescricao = driver.FindElement(By.CssSelector("p[style=\"text-align: justify;\"]"));
+                var elementoPrecoInteiro = driver.FindElement(By.CssSelector(".vtex-product-price-1-x-currencyContainer"));
                 var elementoImagem = driver.FindElement(By.CssSelector(".vtex-store-components-3-x-productImageTag"));
 
-                string precoTexto = $"{elementoPrecoInteiro.Text},{elementoPrecoFracao.Text}";
+                string precoTexto = $"{elementoPrecoInteiro.Text}";
                 decimal preco = decimal.Parse(precoTexto);
 
                 ProdutoDto produto = new()

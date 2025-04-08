@@ -1,3 +1,4 @@
+using ProdutosClient.WebApi.External.Sites.Indiana;
 using ProdutosClient.WebApi.External.Sites.Pacheco;
 using ProdutosClient.WebApi.Factories;
 using ProdutosClient.WebApi.Repositories;
@@ -16,6 +17,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<Pacheco>();
+builder.Services.AddSingleton<Indiana>();
 builder.Services.AddSingleton<SiteFactory>();
 builder.Services.AddSingleton<CsvImportService>();
 builder.Services.AddSingleton<ExportacaoPlanilhaService>();

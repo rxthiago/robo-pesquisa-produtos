@@ -1,6 +1,8 @@
-﻿using ProdutosClient.WebApi.Enums;
+﻿using System.Security.Policy;
+using ProdutosClient.WebApi.Enums;
 using ProdutosClient.WebApi.Exceptions;
 using ProdutosClient.WebApi.External;
+using ProdutosClient.WebApi.External.Sites.Indiana;
 using ProdutosClient.WebApi.External.Sites.Pacheco;
 
 namespace ProdutosClient.WebApi.Factories
@@ -11,6 +13,11 @@ namespace ProdutosClient.WebApi.Factories
         {
             if (site == EnumSite.Pacheco) return services.GetService<Pacheco>();
 
+
+            if (site == EnumSite.Indiana) return services.GetService<Indiana>();
+
+
+            
             throw new SiteNaoImplementadoException();
         }
 
