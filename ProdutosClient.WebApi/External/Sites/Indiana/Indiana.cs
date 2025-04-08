@@ -38,7 +38,7 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
                 await driver.Navigate().GoToUrlAsync(urlPesquisa);
 
                 var elementoNomeProduto = driver.FindElement(By.CssSelector(".vtex-store-components-3-x-productBrand"));
-
+               
                 if (elementoNomeProduto == null)
                 {
                     return default;
@@ -65,11 +65,12 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
 
                 if (scriptEl != null)
                 {
-                    try
-                    {
                         var json = scriptEl.GetAttribute("innerHTML");
                         json = json[json.IndexOf('{')..];
                         json = json.Remove(json.Length - 1, 1);
+
+                    try 
+                    { 
 
                         var vtexContext = JsonConvert.DeserializeObject<VtexContext>(json);
                         departamento = vtexContext?.DepartmentName ?? string.Empty;
