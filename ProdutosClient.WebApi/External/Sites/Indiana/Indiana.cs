@@ -37,6 +37,13 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
                 string urlPesquisa = string.Format(UrlBasePesquisa, ean);
                 await driver.Navigate().GoToUrlAsync(urlPesquisa);
 
+                var element = driver.FindElement(By.XPath("//div[@id='gallery-layout-container']//a[@href]"));
+                if (element == null)
+                {
+                    return default;
+                }
+                await driver.Navigate().GoToUrlAsync(element.GetAttribute("href"));
+
                 var elementoNomeProduto = driver.FindElement(By.CssSelector(".vtex-store-components-3-x-productBrand"));
                
                 if (elementoNomeProduto == null)
