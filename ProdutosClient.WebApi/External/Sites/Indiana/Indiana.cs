@@ -1,10 +1,14 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Globalization;
+using System.Runtime.CompilerServices;
+using System.Security.AccessControl;
 using Newtonsoft.Json;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.UI;
 using ProdutosClient.WebApi.Dtos;
 using ProdutosClient.WebApi.Enums;
 using ProdutosClient.WebApi.External.Sites.Pacheco.Models;
+using SeleniumExtras.WaitHelpers;
 
 namespace ProdutosClient.WebApi.External.Sites.Indiana
 {
@@ -50,18 +54,23 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
                 {
                     return default;
                 }
+                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
 
-                var elementoDescricao = driver.FindElement(By.CssSelector("p[style=\"text-align: justify;\"]"));
+                //var elementoDescricao = driver.FindElement(By.CssSelector("p[style=\"text-align: justify;\"]"));
+
+                //var elementoDescricao = driver.FindElement(By.XPath("/html/body/div[2]/div/div[1]/div/div/div/div[3]/div/div[3]/div/section/div/div/div/div[2]/div/div/div/div/div[1]"));
+
+                var elementoDescricao = wait.Until(ExpectedConditions.ElementIsVisible(
+                By.XPath("/html/body/div[2]/div/div[1]/div/div/div/div[3]/div/div[3]/div/section/div/div/div/div[2]/div/div/div/div/div[1]")));
+
                 var elementoPrecoInteiro = driver.FindElement(By.CssSelector(".vtex-product-price-1-x-currencyContainer"));
                 var elementoImagem = driver.FindElement(By.CssSelector(".vtex-store-components-3-x-productImageTag"));
 
+                string precoTexto = elementoPrecoInteiro?.Text?.Replace("R$", "").Replace(" ", "").Trim();
+                decimal preco = decimal.TryParse(precoTexto, NumberStyles.Number, new CultureInfo("pt-BR"), out var valor) ? valor : 0;
+
                 string imagemUrl = elementoImagem.GetAttribute("src");
                 imagemUrl = imagemUrl.Replace("width=600", "width=1000").Replace("height=600", "height=1000");
-
-                string precoTexto = elementoPrecoInteiro?.Text?.Replace("R$", "").Replace(" ", "").Trim();
-                decimal preco = 0;
-                decimal.TryParse(precoTexto.Replace(",", "."), out preco);
-
 
                 // Tenta buscar categoria e departamento se possível
                 string departamento = string.Empty;
@@ -78,7 +87,6 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
 
                     try 
                     { 
-
                         var vtexContext = JsonConvert.DeserializeObject<VtexContext>(json);
                         departamento = vtexContext?.DepartmentName ?? string.Empty;
                         categoria = vtexContext?.CategoryName ?? string.Empty;
