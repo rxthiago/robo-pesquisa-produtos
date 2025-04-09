@@ -59,8 +59,8 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
 
                 var elementoDescricao = driver.FindElement(By.CssSelector(".vtex-store-components-3-x-productDescriptionText")); // ou  .vtex-store-components-3-x-productDescriptionContainer
 
-                /*var categoryScriptElement = driver.FindElements(By.TagName("script"))
-                                    .FirstOrDefault(x => x.GetAttribute("innerHTML").Contains("vtex-breadcrumb-1-x-link vtex-breadcrumb-1-x-link--2"));*/
+                var categoryScriptElement = driver.FindElements(By.TagName("script"))
+                                    .FirstOrDefault(x => x.GetAttribute("innerHTML").Contains("vtex-breadcrumb-1-x-link vtex-breadcrumb-1-x-link--2"));
 
                 var departamentScriptElement = driver.FindElements(By.TagName("script"))
                                     .FirstOrDefault(x => x.GetAttribute("innerHTML").Contains("vtex-breadcrumb-1-x-link vtex-breadcrumb-1-x-link--1"));
@@ -75,14 +75,11 @@ namespace ProdutosClient.WebApi.External.Sites.Indiana
                 string imagemUrl = elementoImagem.GetAttribute("src");
                 imagemUrl = imagemUrl.Replace("width=600", "width=1000").Replace("height=600", "height=1000");
 
-               // var departamentScriptElement = driver.FindElement(By.CssSelector(".vtex-breadcrumb-1-x-link vtex-breadcrumb-1-x-link--1"));
 
-                var categoryScriptElement = driver.FindElement(By.CssSelector(".vtex-breadcrumb-1-x-link.vtex-breadcrumb-1-x-link--2"));
 
-                /*if(departamentScriptElement == null)
-                {
-                    return default;
-                }*/
+                //var departamentScriptElement = driver.FindElement(By.CssSelector(".vtex-breadcrumb-1-x-link.vtex-breadcrumb-1-x-link--1"));
+
+                //var categoryScriptElement = driver.FindElement(By.CssSelector(".vtex-breadcrumb-1-x-link.vtex-breadcrumb-1-x-link--2"));
 
                 // Tenta buscar categoria e departamento se possível
                 string departamento = string.Empty;
